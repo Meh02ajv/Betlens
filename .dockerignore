@@ -1,0 +1,32 @@
+# Version control and local tooling
+.git
+.github
+.vscode
+.copilot
+
+# Frontend dependencies and build output
+apps/web/node_modules
+apps/web/.next
+apps/web/coverage
+
+# Backend environments and generated files
+apps/api/.venv
+apps/api/__pycache__
+apps/api/**/__pycache__
+apps/api/.pytest_cache
+apps/api/.mypy_cache
+apps/api/.ruff_cache
+apps/api/*.pyc
+
+# Local data, logs, and reports
+*.log
+*.sqlite
+*.db
+celerybeat-schedule
+
+# Workspace artifacts
+node_modules
+**/node_modules
+**/.next
+**/dist
+**/build

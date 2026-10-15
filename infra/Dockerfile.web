@@ -1,0 +1,14 @@
+FROM node:20-alpine AS base
+
+WORKDIR /app
+
+# Install dependencies
+COPY apps/web/package*.json ./
+RUN npm ci
+
+# Copy source
+COPY apps/web/ .
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]

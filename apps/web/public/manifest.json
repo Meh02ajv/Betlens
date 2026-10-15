@@ -1,0 +1,9 @@
+{
+  "name": "BetLens",
+  "short_name": "BetLens",
+  "description": "Sports statistics and probability analytics",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0B2545"
+}

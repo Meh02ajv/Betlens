@@ -1,0 +1,30 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+coverage/
+
+# Local runtime data
+celerybeat-schedule
+*.log
+*.sqlite
+*.db
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
