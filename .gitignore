@@ -16,6 +16,7 @@ node_modules/
 .next/
 out/
 coverage/
+*.tsbuildinfo
 
 # Local runtime data
 celerybeat-schedule
