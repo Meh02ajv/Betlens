@@ -1,6 +1,6 @@
 # BetLens
 
-A sports statistics and probability analytics web app for football and NBA.
+A full-stack football and NBA analytics workspace with live-provider adapters, a FastAPI API, a Next.js web app, scheduled jobs, and a reproducible Docker development environment.
 
 > **Disclaimer:** BetLens is an analytics and decision-support tool. It never accepts bets, never holds user money, and never promises profit. All probabilities are statistical estimates — no outcome is guaranteed.
 
@@ -21,7 +21,7 @@ A sports statistics and probability analytics web app for football and NBA.
 11. [Probability Engine](#probability-engine)
 12. [AI Assistant](#ai-assistant)
 13. [Deployment](#deployment)
-14. [Build Roadmap](#build-roadmap)
+14. [Current Status](#current-status)
 
 ---
 
@@ -85,34 +85,27 @@ BetLens helps football and basketball fans understand the real statistical chanc
 ```
 betlens/
 ├── apps/
-│   ├── web/                    # Next.js 15 frontend (PWA)
-│   │   └── src/
-│   │       ├── app/            # App Router pages
-│   │       ├── components/     # ui/, match/, team/, charts/, chat/, layout/
-│   │       ├── lib/            # API client, utils, auth, formatters
-│   │       ├── hooks/          # Custom React hooks
-│   │       ├── styles/         # Global CSS, design tokens
-│   │       └── types/          # Shared TypeScript types
-│   └── api/                    # FastAPI backend (modular monolith)
-│       └── app/
-│           ├── core/           # Config, security, logging, deps
-│           ├── db/             # Models, session, Alembic migrations
-│           ├── modules/        # auth, users, sports_data, predictions,
-│           │                   # odds_value, assistant, notifications,
-│           │                   # billing, admin
-│           ├── providers/      # football_provider, nba_provider, odds_provider, mock/
-│           ├── ml/             # features, models, training, calibration, backtest
-│           └── workers/        # Celery app + scheduled tasks
-├── packages/
-│   └── shared-types/           # Generated OpenAPI TypeScript client
-├── infra/
-│   ├── docker-compose.yml
-│   ├── Dockerfile.api
-│   ├── Dockerfile.web
-│   └── .github/workflows/ci.yml
-├── docs/                       # Specification, ADRs
-├── .env.example
-├── Makefile
+│   ├── api/                    # FastAPI modular monolith
+│   │   ├── app/core/           # Settings, security, dependencies, logging
+│   │   ├── app/db/             # SQLAlchemy models, sessions, migrations, seed
+│   │   ├── app/modules/        # Auth, users, sports, predictions, odds, chat, billing
+│   │   ├── app/providers/      # Football-Data.org, BallDontLie, odds, mock adapters
+│   │   ├── app/ml/             # Football/NBA models and prediction utilities
+│   │   ├── app/workers/        # Celery worker and scheduled tasks
+│   │   ├── tests/              # API and model tests
+│   │   └── requirements.txt
+│   └── web/                    # Next.js App Router frontend
+│       ├── src/app/            # Public and authenticated pages
+│       ├── src/components/     # Layout, charts, match, team, chat, and UI components
+│       ├── src/lib/            # API client, auth, and utilities
+│       ├── src/types/          # Frontend domain contracts
+│       └── package.json
+├── infra/                      # Dockerfiles and Compose services
+├── docs/                       # Product and technical documentation
+├── packages/shared-types/      # Shared types workspace (reserved for generated contracts)
+├── .env.example                # Safe configuration template
+├── .gitignore                  # Project-specific ignore rules
+├── Makefile                    # Common local commands
 └── README.md
 ```
 
@@ -124,7 +117,7 @@ betlens/
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/your-org/betlens.git
+git clone https://github.com/Meh02ajv/Betlens.git
 cd betlens
 
 # 2. Copy environment file and fill in any keys you have
@@ -210,7 +203,7 @@ npm run dev
 Copy `.env.example` to `.env` and fill in the values you need. All providers default to `mock` so the app is fully functional without any paid API keys.
 
 ```env
-# Core
+Copy `.env.example` to `.env` and fill in the values you need. Mock providers are available for offline development; live football, NBA, odds, and AI features require the corresponding provider configuration.
 APP_ENV=development
 DATABASE_URL=postgresql+psycopg://betlens:betlens@localhost:5432/betlens
 REDIS_URL=redis://localhost:6379/0
@@ -227,16 +220,16 @@ JWT_REFRESH_TTL_DAYS=30
 FOOTBALL_PROVIDER=mock        # mock | api_football | sportmonks
 FOOTBALL_API_KEY=
 NBA_PROVIDER=mock             # mock | balldontlie | sportradar
-NBA_API_KEY=
+FOOTBALL_PROVIDER=mock        # mock | football_data_org
 ODDS_PROVIDER=mock            # mock | the_odds_api
-ODDS_API_KEY=
+NBA_PROVIDER=mock              # mock | balldontlie
 
 # AI assistant (optional — assistant returns mock answers without this)
 ANTHROPIC_API_KEY=
 ANTHROPIC_MODEL=claude-sonnet-4-5
 ASSISTANT_FREE_DAILY_LIMIT=10
-ASSISTANT_PRO_DAILY_LIMIT=200
-
+ANTHROPIC_API_KEY=
+ANTHROPIC_MODEL=claude-sonnet-4-5
 # Billing (optional for dev)
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
@@ -259,10 +252,10 @@ SENTRY_DSN=
 
 When `FOOTBALL_PROVIDER=mock`, `NBA_PROVIDER=mock`, and `ODDS_PROVIDER=mock` (the defaults), the app uses realistic seeded data so every feature works without paid API keys:
 
-- 6 football competitions with standings, fixtures, and results
+When the providers are set to `mock`, the app uses realistic seeded data for local development:
 - NBA regular season with 30 teams
 - Pre-computed probabilities for all upcoming matches
-- Bookmaker odds for value comparison
+- NBA team and game fixtures
 - Player stats and injury reports
 - A demo user account: **demo@betlens.com / demo123456**
 
@@ -325,7 +318,7 @@ make test
 | `/` | Public | Landing page — value proposition, feature preview, pricing |
 | `/login` `/signup` | Public | Authentication |
 | `/onboarding` | Auth (first time) | Competition + team selection wizard |
-| `/dashboard` | Auth | Personalized home with your teams and today's matches |
+| `/dashboard` | Auth | Personalized home with followed teams and date-filtered football/NBA matches |
 | `/competitions` | Public | All covered competitions |
 | `/competitions/[slug]` | Public | Standings, fixtures, stats, season outlook |
 | `/teams/[id]` | Public | Team hub — overview, squad, stats, predictions |
@@ -378,6 +371,10 @@ GET /api/v1/competitions/{slug}/standings
 GET /api/v1/competitions/{slug}/fixtures
 GET /api/v1/competitions/{slug}/stats
 GET /api/v1/competitions/{slug}/outlook
+GET /api/v1/live/competitions/{slug}/standings
+GET /api/v1/live/competitions/{slug}/fixtures?matchday=1
+GET /api/v1/live/nba/teams
+GET /api/v1/live/nba/games
 GET /api/v1/teams/{id}
 GET /api/v1/matches/{id}
 GET /api/v1/matches/{id}/predictions
@@ -388,7 +385,7 @@ GET /api/v1/search?q=
 
 ### User Features
 ```
-GET  /api/v1/me/dashboard
+GET  /api/v1/me/dashboard?date=YYYY-MM-DD
 GET  /api/v1/me/favorites
 PUT  /api/v1/me/favorites
 POST /api/v1/slips/analyze
@@ -430,13 +427,12 @@ POST /api/v1/chat/sessions/{id}/messages   ← SSE stream
 
 ### Football — Dixon-Coles Poisson Model
 
-1. Each team has an **attack strength** and **defence strength** estimated from historical results with exponential time decay (recent matches weigh more).
+1. The current development fallback generates deterministic team strengths from a match identifier; the persistence and training interfaces are ready for fitted ratings.
 2. Expected goals: `λ_home = league_avg_home × attack_home × defence_away × home_adv`
 3. A scoreline matrix (up to 10×10) is built with the Dixon-Coles low-score correction.
 4. Summing cells gives 1X2, over/under, BTTS, and correct-score probabilities.
-5. Adjustments for confirmed lineups, injuries, rest days, and travel.
-6. A **LightGBM** second stage blends Poisson output with Elo difference, rolling xG, form, and odds-implied probability.
-7. Final probabilities are **calibrated** with isotonic regression.
+5. Prediction records include model version, confidence, and explanatory factors.
+6. LightGBM blending, fitted team ratings, and isotonic calibration remain production-model work, not claims about the current fallback output.
 
 ### NBA — Elo / Net Rating Model
 
@@ -462,7 +458,7 @@ Monte Carlo: 10,000 simulations of remaining fixtures → title, top-4, European
 
 The assistant is powered by the **Anthropic Claude API** with tool use and streaming.
 
-**Rules:**
+The assistant supports Gemini and Anthropic streaming providers. When an AI provider is unavailable, it returns readable live-provider or database-backed sports data instead of exposing an internal error.
 - Every number it states comes from a tool call — it never invents statistics.
 - Answers include a confidence level, top 3 factors, and data freshness.
 - It never claims certainty, never pressures users to bet, and never uses phrases like "sure win" or "guaranteed."
@@ -513,20 +509,18 @@ fly deploy
 
 ---
 
-## Build Roadmap
+## Current Status
 
-| Phase | Duration | Deliverables |
-|---|---|---|
-| 0. Foundations | 1 week | Monorepo, Docker Compose, CI, design tokens, auth skeleton, mock providers |
-| 1. Accounts & onboarding | 1–2 weeks | Sign-up, login, email verification, Google OAuth, onboarding wizard |
-| 2. Sports data | 2–3 weeks | Real provider integration, ingestion jobs, competition/team/match/player pages |
-| 3. Probability engine v1 | 2–3 weeks | Dixon-Coles, Elo, prediction storage, probability UI, Model page |
-| 4. Events & players | 2 weeks | Scorer/assist/card markets, NBA props, season simulations |
-| 5. Assistant | 2 weeks | Tool layer, Claude integration, streaming chat, answer cards, guardrails |
-| 6. Odds & value | 2 weeks | Odds ingestion, comparison, value finder, slip analyzer, bet tracker |
-| 7. Notifications & live | 1–2 weeks | SSE live scores, notification center, email and web push |
-| 8. Billing & admin | 1 week | Stripe plans, feature gating, admin area |
-| 9. Hardening & launch | 2 weeks | Security review, performance tuning, accessibility, load tests |
+The repository is a working development prototype with:
+
+- Docker Compose orchestration for web, API, PostgreSQL, Redis, Celery worker, and Celery Beat.
+- Authenticated dashboard, competition pages, match pages, assistant, value finder, slip analyzer, tracker, notifications, billing, and admin surfaces.
+- Live football data through Football-Data.org when configured, with seeded database fallback.
+- Live NBA teams and games through BallDontLie when configured, with seeded development data.
+- Deterministic development predictions based on a Dixon-Coles-style scoreline model.
+- Natural-language assistant streaming with database/provider fallback when an AI key or provider is unavailable.
+
+Before production use, fit and validate the prediction models against historical data, add stronger end-to-end coverage, configure real secrets through a deployment platform, and verify commercial data-provider licensing.
 
 ---
 
